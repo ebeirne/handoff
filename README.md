@@ -213,7 +213,8 @@ the robot's name. Each session gets **keep**, **review** or **drop**, with the r
 
 **Drop:**
 - a required stream was never logged
-- the session is too short
+- the session is too short (for a LeRobot dataset without a spec: under a quarter of its median episode, so
+  datasets that are a couple of seconds per episode by design aren't dropped wholesale)
 - the arm never moves
 - the file can't be read at all
 
@@ -227,7 +228,8 @@ the robot's name. Each session gets **keep**, **review** or **drop**, with the r
   `<state column>_hand` or `_id` column (which hand the state follows) works the same way: the jump at a left/right
   switch isn't counted as motion
 - mostly idle time
-- actions lagging the measured state, compared with the fleet's usual lag (repairable)
+- actions lagging the measured state, compared with the fleet's usual lag (repairable). The limit is 3 frames,
+  wider where the per-episode estimate itself varies, so the flags are outliers rather than noise
 
 A LeRobot dataset built from human video often has an action stream and no robot state, or the reverse. Without a
 spec, only the streams the dataset records are required; the report says which one is missing, and the checks that

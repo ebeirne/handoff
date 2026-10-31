@@ -556,8 +556,13 @@ def triage(sessions: list[Session], spec: dict) -> dict:
     sync = spec.get("sync")
     lags = [r["facts"]["lag_frames"] for r in results if "lag_frames" in r["facts"]]
     median_lag = int(np.median(lags)) if lags else None
+    lag_limit = None
     if sync and median_lag is not None:
-        limit = int(sync.get("max_offset_frames", 3))
+        # In most datasets every episode gives the same lag, and 3 frames off it is a real defect. Where the estimate
+        # itself varies from episode to episode (DROID's spreads about a frame either way), the limit widens to four
+        # standard deviations of that spread, so the flags are the outliers and not the noise.
+        mad = float(np.median(np.abs(np.asarray(lags) - median_lag)))
+        limit = lag_limit = max(int(sync.get("max_offset_frames", 3)), int(np.ceil(4 * 1.4826 * mad)))
         for r in results:
             lag = r["facts"].get("lag_frames")
             if lag is not None and abs(lag - median_lag) >= limit:
@@ -579,7 +584,7 @@ def triage(sessions: list[Session], spec: dict) -> dict:
         "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "spec": {k: v for k, v in spec.items()},
         "summary": {"sessions": len(results), **{v: sum(r["verdict"] == v for r in results) for v in VERDICTS},
-                    "hours": hours, "median_lag_frames": median_lag},
+                    "hours": hours, "median_lag_frames": median_lag, "lag_limit_frames": lag_limit},
         "by_robot": {k: dict(v) for k, v in sorted(by_robot.items())},
         "issues": dict(issue_counts.most_common()),
         "sessions": [{**r, "issues": [vars(i) for i in r["issues"]]} for r in results],

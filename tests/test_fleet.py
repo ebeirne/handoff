@@ -182,6 +182,25 @@ def test_fleet_stops_on_a_dataset_without_state_or_action(tmp_path):
     assert main(["fleet", str(root), "--out", str(tmp_path / "out")]) == 2  # an error, not 2 dropped episodes
 
 
+def test_lag_limit_widens_where_the_lag_estimate_itself_is_noisy(tmp_path):
+    """Where every episode gives the same lag, 3 frames off it is flagged. Where the estimate spreads from episode to
+    episode (DROID's does), ordinary spread isn't flagged; a real outlier still is."""
+    root = tmp_path / "noisy"
+    _lerobot(root, delays=[5, 6, 7, 8, 9, 10, 11] * 3 + [30], n=200)
+    spec = lerobot_defaults(load_fleet_spec(None))
+    spec["sync"] = {**spec["sync"], "window_frames": 40}  # the default search reaches 15 frames; the outlier is 30
+    report = triage(load_logs(root, spec), spec)
+    flagged = [s["session"] for s in report["sessions"] if any(i["check"] == "action_lag" for i in s["issues"])]
+    assert flagged == ["episode_000021"]  # the 30-frame one; the 5s and 11s sit inside the spread
+    assert report["summary"]["lag_limit_frames"] > 3
+
+    root = tmp_path / "steady"
+    _lerobot(root, delays=[8] * 20 + [11])
+    report = triage(load_logs(root, spec), spec)
+    assert report["summary"]["lag_limit_frames"] == 3
+    assert [s["session"] for s in report["sessions"] if s["verdict"] == "review"] == ["episode_000020"]
+
+
 def test_short_episodes_are_judged_against_the_dataset_not_a_fixed_floor(tmp_path):
     """Language Table's episodes are a couple of seconds long by design. Without a spec, "too short" means short for
     this dataset; a spec's own min_duration_s is kept as written."""
