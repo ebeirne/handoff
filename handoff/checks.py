@@ -8,7 +8,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-from .video import WORK_WIDTH, Sample
+from .video import WORK_WIDTH, Sample, rate_runs
 
 
 @dataclass
@@ -79,6 +79,22 @@ def check_resolution(sample: Sample, params: dict) -> CheckResult:
     return CheckResult("resolution", ok, float(w * h), f">= {min_w}x{min_h}", reason)
 
 
+def check_bitrate(sample: Sample, params: dict) -> CheckResult:
+    """Bits per second against what the frame size needs. Phone cameras record 1080p at roughly 8-20 Mbps; a 1080p file
+    at 1-2 Mbps has usually been re-encoded by a messaging app on the way in, which smears fast hand motion."""
+    min_mbps = params.get("min_mbps_1080p", 3.0)
+    info = sample.info
+    if info.duration_s <= 0 or not info.width or info.path.suffix.lower() == ".r3d":  # .r3d stores JPEG frames
+        return CheckResult("bitrate", None, reason="skipped: no video stream to measure")
+    mbps = info.path.stat().st_size * 8 / info.duration_s / 1e6
+    need = min_mbps * (info.width * info.height) / (1920 * 1080)
+    ok = mbps >= need
+    reason = f"{mbps:.1f} Mbps at {info.width}x{info.height}"
+    if not ok:
+        reason += f", below {need:.1f}: probably re-encoded (a messaging app or editor) after capture"
+    return CheckResult("bitrate", ok, mbps, f">= {min_mbps} Mbps at 1080p, scaled by frame size", reason)
+
+
 def check_black_frames(sample: Sample, params: dict) -> CheckResult:
     level = params.get("level", 16)
     limit = params.get("max_fraction", 0.05)
@@ -110,16 +126,30 @@ def check_blur(sample: Sample, params: dict) -> CheckResult:
     return CheckResult("blur", ok, sharp, f">= {minimum}", reason, evidence)
 
 
+def _image_area(grays: list[np.ndarray]) -> np.ndarray | None:
+    """Pixels that belong to the picture: a fisheye lens's black surround or a letterbox stays black in every frame,
+    and counting it would call every frame of a fisheye clip too dark. None when there's no such border."""
+    if len(grays) < 3:
+        return None
+    border = np.mean([g <= 5 for g in grays], axis=0) >= 0.95
+    if not border.any() or border.mean() > 0.8:  # nothing to drop, or the clip is simply black
+        return None
+    return ~border
+
+
 def check_exposure(sample: Sample, params: dict) -> CheckResult:
-    """A frame is badly exposed when a large share of it is blown out or crushed; glare patches are fine."""
+    """A frame is badly exposed when a large share of it is blown out or crushed; glare patches are fine. A border
+    that's black in every frame (fisheye surround, letterbox) isn't part of the picture and isn't counted."""
     max_over = params.get("max_overexposed_area", 0.35)
     max_under = params.get("max_underexposed_area", 0.35)
     limit = params.get("max_bad_frames", 0.2)
+    grays = [_gray(f) for f in sample.frames]
+    area = _image_area(grays)
     bad_over = bad_under = 0
     mask = []
-    for f in sample.frames:
-        g = _gray(f)
-        over, under = (g >= 250).mean() > max_over, (g <= 5).mean() > max_under
+    for g in grays:
+        px = g[area] if area is not None else g
+        over, under = (px >= 250).mean() > max_over, (px <= 5).mean() > max_under
         bad_over += int(over)
         bad_under += int(under)
         mask.append(bool(over or under))
@@ -225,6 +255,63 @@ def check_streams(sample: Sample, params: dict) -> CheckResult:
     return CheckResult("streams", ok, float(len(problems)), threshold, reason, sorted(evidence) or None)
 
 
+def check_frame_timing(sample: Sample, params: dict) -> CheckResult:
+    """Frame timing from the timestamp kept for every frame (Record3D .r3d): frames dropped, stalls, and a frame rate
+    that changes partway through, as when a phone that heats up halves its rate. The clip still plays and looks fine,
+    but a converter that assumes one rate per episode (LeRobot does) gets the timing wrong from that point on. A steady
+    rate that differs from the metadata's is reported, not flagged: the fps check judges the rate actually recorded."""
+    max_dropped = params.get("max_dropped_fraction", 0.05)
+    max_gap = params.get("max_gap_s", 0.25)
+    allow_change = params.get("allow_rate_change", False)
+    threshold = f"dropped <= {max_dropped:.0%}, gaps <= {max_gap}s" + ("" if allow_change else ", one frame rate")
+    t = sample.frame_times
+    if t is None or len(t) < 2:
+        return CheckResult("frame_timing", None, reason="skipped: this format has no per-frame timestamps")
+    dt = np.diff(t)
+    claimed = sample.claimed_fps or sample.info.fps or 1 / float(np.median(dt))
+    runs, usual = rate_runs(t, claimed)
+    missing = np.clip(np.round(dt * claimed / usual) - 1, 0, None)  # frames that belong between two recorded ones
+    dropped = float(missing.sum() / (missing.sum() + len(t)))
+    problems = []
+    if len(runs) > 1 and not allow_change:
+        steps = ", then ".join(f"{fps:g} fps" + ("" if i == len(runs) - 1 else f" until {_mmss(end)}")
+                               for i, (_, end, fps) in enumerate(runs[:4]))
+        problems.append(f"frame rate changes mid-clip: {steps}")
+    if dropped > max_dropped:
+        problems.append(f"{dropped:.0%} of frames dropped")
+    big = np.where(dt > max_gap)[0]
+    if len(big):
+        worst = int(big[np.argmax(dt[big])])
+        problems.append(f"{len(big)} stalls, longest {dt[worst]:.2f}s at {_mmss(t[worst])}")
+    if problems:
+        reason = "; ".join(problems)
+    else:
+        rates = " and ".join(f"{fps:g}" for _, _, fps in runs)
+        reason = f"steady {rates} fps, {dropped:.1%} dropped"
+        if len(runs) == 1 and abs(runs[0][2] - claimed) > 0.03 * claimed:
+            reason += f" (the file's metadata says {claimed:g} fps)"
+    evidence = [[round(end, 1), round(end, 1)] for _, end, _ in runs[:-1]] + \
+        [[round(float(t[i]), 1), round(float(t[i + 1]), 1)] for i in big]
+    return CheckResult("frame_timing", not problems, dropped, threshold, reason, evidence or None)
+
+
+def check_depth(sample: Sample, params: dict) -> CheckResult:
+    """How much of each depth map the sensor trusts (ARKit confidence 2, high). Water, glass, glossy surfaces and
+    sunlight lower it; a whole session near zero points at the capture setup, worth fixing before the next clip."""
+    min_high = params.get("min_high_confidence", 0.3)
+    threshold = f"high-confidence depth >= {min_high:.0%} of pixels"
+    if not sample.depth_conf:
+        return CheckResult("depth", None, reason=f"skipped: {sample.depth_note or 'no depth in this clip'}")
+    times = [ti for ti, _ in sample.depth_conf]
+    share = [float((c == 2).mean()) for _, c in sample.depth_conf]
+    value = float(np.median(share))
+    ok = value >= min_high
+    reason = f"high-confidence depth on {value:.0%} of pixels (median of {len(share)} sampled frames)"
+    if not ok:
+        reason += "; check the LiDAR, the surfaces in view (water, glass, gloss) and the capture settings"
+    return CheckResult("depth", ok, value, threshold, reason, None if ok else _ranges(times, [s < min_high for s in share]))
+
+
 def _mmss(t: float) -> str:
     m, s = divmod(int(round(t)), 60)
     return f"{m}:{s:02d}"
@@ -316,10 +403,13 @@ PER_CLIP = {
     "duration": check_duration,
     "fps": check_fps,
     "resolution": check_resolution,
+    "bitrate": check_bitrate,
     "black_frames": check_black_frames,
     "frozen": check_frozen,
     "blur": check_blur,
     "exposure": check_exposure,
     "shake": check_shake,
     "streams": check_streams,
+    "frame_timing": check_frame_timing,
+    "depth": check_depth,
 }

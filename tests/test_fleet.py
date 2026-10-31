@@ -182,6 +182,45 @@ def test_fleet_stops_on_a_dataset_without_state_or_action(tmp_path):
     assert main(["fleet", str(root), "--out", str(tmp_path / "out")]) == 2  # an error, not 2 dropped episodes
 
 
+def test_fleet_requires_only_the_streams_a_lerobot_dataset_records(tmp_path):
+    """Hand-pose datasets from human video often have an action stream and no robot state. That's the format, so the
+    episodes aren't dropped as missing a stream; the report says what isn't recorded. A spec's own list still holds."""
+    from handoff.cli import main
+
+    pa = pytest.importorskip("pyarrow")
+    import pyarrow.parquet as pq
+
+    root = tmp_path / "video"
+    _lerobot(root, delays=[3, 3, 3])
+    path = root / "data" / "chunk-000" / "file-000.parquet"
+    pq.write_table(pq.read_table(path).drop_columns(["observation.state"]), path)
+
+    out = tmp_path / "out"
+    assert main(["fleet", str(root), "--out", str(out)]) == 0
+    report = json.loads((out / "fleet.json").read_text(encoding="utf-8"))
+    assert report["summary"]["drop"] == 0
+    assert report["spec"]["absent_streams"] == ["observation.state"]
+    assert "Not recorded in this dataset: observation.state" in (out / "fleet.html").read_text(encoding="utf-8")
+
+    t = pq.read_table(path)  # per-hand flags, as Arete's ego2lerobot writes them: [left found, right found]
+    ep, frame = np.asarray(t.column("episode_index").to_pylist()), np.asarray(t.column("frame_index").to_pylist())
+    hands = np.ones((len(ep), 2))
+    hands[frame % 10 == 0, 1] = 0                  # the right hand drops out now and then: still measured
+    hands[(ep == 2) & (frame >= 60), :] = 0        # episode 2 loses both hands for most of it
+    pq.write_table(t.append_column("observation.hands.valid", pa.array(hands.tolist())), path)
+    out2 = tmp_path / "out2"
+    assert main(["fleet", str(root), "--out", str(out2)]) == 0
+    r = {s["session"]: s for s in json.loads((out2 / "fleet.json").read_text(encoding="utf-8"))["sessions"]}
+    assert r["episode_000000"]["facts"]["untracked"]["fraction"] == 0.0
+    assert {i["check"] for i in r["episode_000002"]["issues"]} == {"untracked"}
+
+    p = tmp_path / "strict.yaml"
+    p.write_text("fleet:\n  required: [observation.state, action]\n", encoding="utf-8")
+    assert main(["fleet", str(root), "--spec", str(p), "--out", str(tmp_path / "strict")]) == 0
+    strict = json.loads((tmp_path / "strict" / "fleet.json").read_text(encoding="utf-8"))
+    assert strict["summary"]["drop"] == 3
+
+
 def test_fleet_flags_state_copied_from_actions(tmp_path):
     root = tmp_path / "ds"
     _lerobot(root, delays=[3, 3, 3, 3], copied=(2,))
@@ -229,6 +268,35 @@ def test_fleet_reports_untracked_frames_and_keeps_them_out_of_idle_and_lag(tmp_p
                                                   if i["check"] == "untracked")
     assert {i["check"] for i in r["episode_000004"]["issues"]} == {"action_lag"}  # the real lag is still found
     assert report["summary"]["median_lag_frames"] == 3
+
+
+def test_fleet_ignores_the_jump_when_tracking_switches_hands(tmp_path):
+    """Datasets that track one hand per frame (observation.state_hand: 0 left, 1 right) jump when they switch. The
+    jump isn't motion: it mustn't hide the real lag or invent one."""
+    pa = pytest.importorskip("pyarrow")
+    import pyarrow.parquet as pq
+
+    root = tmp_path / "two_hands"
+    _lerobot(root, delays=[3, 3, 3, 3, 9], n=320)
+    path = root / "data" / "chunk-000" / "file-000.parquet"
+    t = pq.read_table(path)
+    frame = np.asarray(t.column("frame_index").to_pylist())
+    state, act = np.asarray(t.column("observation.state").to_pylist()), np.asarray(t.column("action").to_pylist())
+    hand = (frame // 25) % 2                  # switch hands every 25 frames, in every episode
+    state[hand == 1] += 5.0                   # the other hand sits somewhere else
+    act[hand == 1] += 5.0
+    cols = {k: t.column(k) for k in ("episode_index", "frame_index", "timestamp")}
+    cols.update({"observation.state": state.tolist(), "action": act.tolist(),
+                 "observation.state_hand": hand.reshape(-1, 1).astype(float).tolist()})
+    pq.write_table(pa.table(cols), path)
+
+    spec = lerobot_defaults(load_fleet_spec(None))
+    report = triage(load_logs(root, spec), spec)
+    r = _by_name(report)
+    assert [r[f"episode_{i:06d}"]["verdict"] for i in range(4)] == ["keep"] * 4
+    assert {i["check"] for i in r["episode_000004"]["issues"]} == {"action_lag"}
+    assert report["summary"]["median_lag_frames"] == 3
+    assert r["episode_000000"]["facts"]["track_switches"] == 12
 
 
 def test_repair_brings_lagged_episodes_back_in_line(tmp_path):

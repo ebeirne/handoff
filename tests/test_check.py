@@ -64,6 +64,29 @@ def test_glare_patch_does_not_fail_exposure(tmp_path):
     assert check_exposure(sample, {}).passed is True
 
 
+def test_fisheye_border_is_not_counted_as_dark(tmp_path):
+    """A fisheye picture is a circle inside a black frame (some vendors' preview clips, Egocentric-10K). The surround is
+    black in every frame; only the picture itself counts. A dark picture inside the circle is still caught."""
+    import numpy as np
+
+    from handoff.checks import check_exposure
+    from handoff.video import ClipInfo, Sample
+
+    yy, xx = np.mgrid[:240, :320]
+    circle = (yy - 120) ** 2 + (xx - 160) ** 2 < 100 ** 2  # the picture covers ~41% of the frame
+    rng = np.random.default_rng(0)
+    frames = []
+    for _ in range(10):
+        f = np.zeros((240, 320, 3), np.uint8)
+        f[circle] = rng.integers(60, 200, (int(circle.sum()), 3))
+        frames.append(f)
+    sample = Sample(ClipInfo(tmp_path / "x", True), [float(i) for i in range(10)], frames)
+    assert check_exposure(sample, {}).passed is True
+
+    dark = [np.where(circle[..., None], f // 30, 0).astype(np.uint8) for f in frames]  # the scene itself is too dark
+    assert check_exposure(Sample(ClipInfo(tmp_path / "x", True), [float(i) for i in range(10)], dark), {}).passed is False
+
+
 def test_flat_clips_are_not_duplicates_of_each_other(result):
     assert "duplicates" not in _failed(_by_clip(result)["white.avi"])
 
@@ -222,3 +245,18 @@ def test_init_spec_writes_a_loadable_spec(tmp_path):
     assert main(["init-spec", str(target)]) == 0
     spec = load_spec(target)
     assert "hands_visible" in spec.checks
+
+
+def test_bitrate_flags_a_file_too_small_for_its_frame_size(tmp_path):
+    from handoff.checks import check_bitrate
+    from handoff.video import ClipInfo, Sample
+
+    def sample(mb, w=1920, h=1080, seconds=60.0):
+        p = tmp_path / f"{mb}_{w}.mp4"
+        p.write_bytes(b"\0" * int(mb * 1e6))
+        return Sample(ClipInfo(p, True, 30.0, int(seconds * 30), w, h, seconds), [], [])
+
+    assert check_bitrate(sample(60), {}).passed                       # 8 Mbps at 1080p: a phone's own recording
+    low = check_bitrate(sample(10), {})                                # 1.3 Mbps at 1080p
+    assert low.passed is False and "1.3 Mbps at 1920x1080" in low.reason and "re-encoded" in low.reason
+    assert check_bitrate(sample(10, 640, 360), {}).passed             # the same bits are plenty at 360p

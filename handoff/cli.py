@@ -92,7 +92,7 @@ def _cmd_accuracy(args: argparse.Namespace) -> int:
 
 
 def _cmd_fleet(args: argparse.Namespace) -> int:
-    from .fleet import lerobot_defaults, load_fleet_spec, load_logs, triage, write_outputs
+    from .fleet import lerobot_defaults, lerobot_fit, load_fleet_spec, load_logs, triage, write_outputs
 
     logs = Path(args.logs)
     if not logs.is_dir():
@@ -103,7 +103,9 @@ def _cmd_fleet(args: argparse.Namespace) -> int:
     except (OSError, ValueError, yaml.YAMLError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    if (logs / "meta" / "info.json").exists():
+    lerobot = (logs / "meta" / "info.json").exists()
+    required_by_user = bool(spec["required"])
+    if lerobot:
         spec = lerobot_defaults(spec)
     workers = args.workers if args.workers > 0 else max(1, (os.cpu_count() or 2) - 1)
     try:
@@ -114,6 +116,8 @@ def _cmd_fleet(args: argparse.Namespace) -> int:
     if not sessions:
         print(f"error: no .mcap files or LeRobot episodes in {logs}", file=sys.stderr)
         return 2
+    if lerobot and not required_by_user:  # a spec's own `required` list is kept as written
+        spec = lerobot_fit(spec, sessions)
     report = triage(sessions, spec)
     report["source"] = str(logs.resolve())
     paths = write_outputs(report, args.out)

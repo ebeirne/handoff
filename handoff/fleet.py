@@ -45,6 +45,7 @@ class Stream:
     t: np.ndarray                      # seconds, sorted
     values: np.ndarray | None = None   # (n, d) numeric signal, when known
     valid: np.ndarray | None = None    # (n,) bool: False where the dataset says the value wasn't measured
+    track: np.ndarray | None = None    # (n, k): what the value follows (which hand); a change is a switch, not motion
 
 
 @dataclass
@@ -233,6 +234,23 @@ def _validity(table, cols: set[str], names: list[str]) -> np.ndarray | None:
     return np.all(_joined(table, flags) >= 0.5, axis=1)
 
 
+def _hands_found(table, cols: set[str]) -> np.ndarray | None:
+    """Per-row "a hand was found", from per-hand flags such as `observation.hands.valid` ([left, right]) in datasets
+    whose actions come from hand tracking on video. A frame with one hand found is measured; one with none isn't."""
+    flags = sorted(c for c in cols if c.startswith("observation.") and c.endswith((".valid", "_valid"))
+                   and not c.startswith("observation.state"))
+    if not flags:
+        return None
+    return np.any(_joined(table, flags) >= 0.5, axis=1)
+
+
+def _tracked_by(table, cols: set[str], names: list[str]) -> np.ndarray | None:
+    """What the state follows on each row, from `<column>_hand` or `<column>_id` beside it. Hand-tracking datasets
+    that record one hand per frame switch between left and right; the jump at a switch isn't motion."""
+    ids = [f"{n}_{suffix}" for n in names for suffix in ("hand", "id") if f"{n}_{suffix}" in cols]
+    return _joined(table, ids) if ids else None
+
+
 def load_lerobot(root: str | Path) -> list[Session]:
     """One session per episode of a LeRobot v3 dataset: the state and action streams, timed by `timestamp`, and the
     state's validity flags when the dataset has them."""
@@ -252,6 +270,9 @@ def load_lerobot(root: str | Path) -> list[Session]:
         ts = table.column("timestamp").to_numpy()
         series = {k: _joined(table, names) for k, names in layout.items() if names}
         valid = _validity(table, cols, layout["observation.state"])
+        if valid is None and not layout["observation.state"]:  # actions from hand tracking, flagged per hand
+            valid = _hands_found(table, cols)
+        track = _tracked_by(table, cols, layout["observation.state"])
         for i in np.unique(ep):
             idx = np.where(ep == i)[0]
             rows[int(i)]["t"].extend(ts[idx].tolist())
@@ -259,6 +280,8 @@ def load_lerobot(root: str | Path) -> list[Session]:
                 rows[int(i)][k].extend(arr[idx].tolist())
             if valid is not None:
                 rows[int(i)]["valid"].extend(valid[idx].tolist())
+            if track is not None:
+                rows[int(i)]["track"].extend(track[idx].tolist())
     sessions = []
     for i in sorted(rows):
         t = np.asarray(rows[i]["t"], dtype=float)
@@ -268,8 +291,11 @@ def load_lerobot(root: str | Path) -> list[Session]:
             if rows[i].get(k):
                 vals = np.asarray(rows[i][k], dtype=float)
                 streams[k] = Stream(k, t[order], (vals.reshape(len(t), -1))[order])
-        if rows[i].get("valid") and "observation.state" in streams:
-            streams["observation.state"].valid = np.asarray(rows[i]["valid"], dtype=bool)[order]
+        primary = "observation.state" if "observation.state" in streams else "action"
+        if rows[i].get("valid") and primary in streams:
+            streams[primary].valid = np.asarray(rows[i]["valid"], dtype=bool)[order]
+        if rows[i].get("track") and "observation.state" in streams:
+            streams["observation.state"].track = np.asarray(rows[i]["track"], dtype=float).reshape(len(t), -1)[order]
         sessions.append(Session(f"episode_{i:06d}", robot, streams))
     return sessions
 
@@ -280,6 +306,16 @@ def lerobot_defaults(spec: dict) -> dict:
     spec["idle"] = spec.get("idle") or {"stream": "observation.state", "max_idle_fraction": 0.5}
     spec["sync"] = spec.get("sync") or {"state": "observation.state", "action": "action", "max_offset_frames": 3}
     spec["required"] = spec["required"] or ["observation.state", "action"]
+    return spec
+
+
+def lerobot_fit(spec: dict, sessions: list[Session]) -> dict:
+    """Require only the streams this dataset records. Human-video datasets often have no robot state, or no action:
+    that's the format, not a stream missing from every episode. The report lists what the dataset doesn't record."""
+    present = {name for s in sessions for name in s.streams}
+    spec = dict(spec)
+    spec["absent_streams"] = [r for r in spec["required"] if r not in present]
+    spec["required"] = [r for r in spec["required"] if r in present]
     return spec
 
 
@@ -343,6 +379,19 @@ def _xcorr_lag(state: np.ndarray, action: np.ndarray, window: int, ok: np.ndarra
         if score > best_score:
             best, best_score = lag, score
     return best
+
+
+def _steps_ok(st: Stream) -> np.ndarray | None:
+    """Per frame-to-frame step: True where both frames were measured and follow the same thing (one hand). None when
+    the dataset says nothing either way."""
+    if st.valid is None and st.track is None:
+        return None
+    ok = np.ones(max(len(st.t) - 1, 0), dtype=bool)
+    if st.valid is not None:
+        ok &= st.valid[:-1] & st.valid[1:]
+    if st.track is not None:
+        ok &= np.all(st.track[1:] == st.track[:-1], axis=1)
+    return ok
 
 
 def _on_grid(src: Stream, grid: np.ndarray) -> np.ndarray:
@@ -419,8 +468,9 @@ def check_session(s: Session, spec: dict) -> tuple[list[Issue], dict]:
     if idle and idle["stream"] in s.streams and s.streams[idle["stream"]].values is not None:
         st = s.streams[idle["stream"]]
         speed = np.linalg.norm(np.diff(st.values, axis=0), axis=1) / np.maximum(np.diff(st.t), 1e-6)
-        if st.valid is not None:
-            speed = speed[st.valid[:-1] & st.valid[1:]]  # only steps between two measured frames
+        steps = _steps_ok(st)
+        if steps is not None:
+            speed = speed[steps]  # only steps between two measured frames of the same hand
         if len(speed) > 2:
             moving = float(np.percentile(speed, 90))
             frac = float(np.mean(speed < max(0.05 * moving, 1e-9))) if moving > 1e-9 else 1.0
@@ -439,11 +489,14 @@ def check_session(s: Session, spec: dict) -> tuple[list[Issue], dict]:
             window = int(sync.get("window_frames", 15))
             state, action = _on_grid(st, grid), _on_grid(ac, grid)
             valid = st.valid  # on the state's own timestamps, which are the grid
-            ok = None
-            if valid is not None:
-                # A change counts only between measured frames, and delta-style actions are computed from the next
-                # frame too, so that one must be measured as well.
-                ok = valid[:-1] & valid[1:] & np.r_[valid[2:], False]
+            ok = _steps_ok(st)
+            if ok is not None:
+                # A change counts only between measured frames of the same hand, and delta-style actions are computed
+                # from the next frame too, so the next step must be clean as well.
+                ok = ok & np.r_[ok[1:], False]
+                if st.track is not None:
+                    facts["track_switches"] = int(np.sum(np.any(st.track[1:] != st.track[:-1], axis=1)
+                                                         & (valid[:-1] & valid[1:] if valid is not None else True)))
             copied = None if sync.get("state_from_commands") else _copied_from_action(state, action, window, valid)
             if copied:
                 k, frac = copied
@@ -544,6 +597,10 @@ def to_html(report: dict) -> str:
     total_h = sum(s["hours"].values())
     body = cards([("sessions", s["sessions"]), ("keep", s["keep"]), ("review", s["review"]), ("drop", s["drop"]),
                   ("usable hours", f"{s['hours']['keep']:.2f} of {total_h:.2f}")])
+    absent = report["spec"].get("absent_streams")
+    if absent:
+        body += (f'<p class="muted">Not recorded in this dataset: {esc(", ".join(absent))}. Checks that need it '
+                 f"(lag, copied state, idle) don't apply.</p>")
     if report["issues"]:
         body += "<h2>What goes wrong most</h2><table><tr><th>Issue</th><th>Sessions</th></tr>" + "".join(
             f"<tr><td>{esc(k)}</td><td>{v}</td></tr>" for k, v in report["issues"].items()) + "</table>"

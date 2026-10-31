@@ -17,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 hands = ["mediapipe>=0.10.14"]
+depth = ["pyliblzfse>=0.4"]
 dev = ["pytest>=8", "pyarrow>=15"]
 scan = ["torch>=2.2", "pyarrow>=15"]
 fleet = ["mcap>=1.6", "mcap-ros2-support>=0.5", "pyarrow>=15"]

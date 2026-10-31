@@ -47,6 +47,7 @@ Open `reports/demo/report.html`.
 | `duration` | it's shorter or longer than allowed | `min_s`, `max_s` |
 | `fps` | the frame rate is too low | `min` |
 | `resolution` | the frame is too small | `min_width`, `min_height` |
+| `bitrate` | the file holds too few bits per second for its frame size, the sign of a messaging-app re-encode after capture | `min_mbps_1080p` (scaled by frame size) |
 | `black_frames` | too many sampled frames are black | `max_fraction`, `level` |
 | `frozen` | too many sampled intervals show no change | `max_fraction`, `min_diff` |
 | `blur` | median sharpness (Laplacian variance) is too low | `min_sharpness` |
@@ -55,6 +56,14 @@ Open `reports/demo/report.html`.
 | `hands_visible` | hands appear in too few sampled frames | `min_fraction`, `detection_confidence` (needs a hand model, below) |
 | `duplicates` | it nearly duplicates an earlier clip in the delivery | `max_hamming` |
 | `streams` | recorded streams (video, IMU, actions, gloves) are missing, drop data, start out of sync or stop early. Reads `<clip>.streams.json` with each stream's timestamps | `required`, `max_start_offset_s`, `max_gap_s`, `min_coverage` |
+| `frame_timing` | the frame rate changes partway through, or the recorder dropped frames or stalled, from the timestamp kept for every frame (Record3D `.r3d`) | `max_dropped_fraction`, `max_gap_s`, `allow_rate_change` |
+| `depth` | too little of the depth map is high confidence, by the sensor's own per-pixel confidence (Record3D `.r3d`; needs `pip install -e .[depth]`) | `min_high_confidence` |
+
+**iPhone LiDAR clips:** `handoff check` also reads Record3D's `.r3d` files (a ZIP of JPEG frames, LiDAR depth and
+confidence maps, and per-frame timestamps). The image checks and `hands_visible` run on its frames as on any video.
+The frame rate `fps` judges is the one actually recorded, read from the timestamps, not the metadata's (some
+Record3D files say 30 fps and record a steady 15). On a public raw iPhone LiDAR dataset, `frame_timing` flags a clip that records
+15 fps for 18 seconds and then 30, which plays normally and which no image check can see.
 
 Checks run on frames sampled at `sampling.fps` (default 2 per second), downscaled to 640 pixels wide. `shake` also
 looks at the two frames right after each sample point, so it measures motion 33 ms apart rather than half a second
@@ -193,9 +202,15 @@ the robot's name. Each session gets **keep**, **review** or **drop**, with the r
 - a stream that starts late or stops early
 - a state the dataset itself marks as not measured in more than half the frames (`observation.state_valid` = 0, or
   any `<state column>_valid` flag), as datasets built from hand or pose tracking on video do. Those frames are left
-  out of the idle and lag checks, since a zero placeholder would look like an arm standing still
+  out of the idle and lag checks, since a zero placeholder would look like an arm standing still. A
+  `<state column>_hand` or `_id` column (which hand the state follows) works the same way: the jump at a left/right
+  switch isn't counted as motion
 - mostly idle time
 - actions lagging the measured state, compared with the fleet's usual lag (repairable)
+
+A LeRobot dataset built from human video often has an action stream and no robot state, or the reverse. Without a
+spec, only the streams the dataset records are required; the report says which one is missing, and the checks that
+compare state with action don't run. A spec's own `required` list is kept as written.
 - a state that is, value for value, the commands from a frame or two earlier: it was filled in, not measured. Set
   `state_from_commands: true` under `sync` when that is on purpose (retargeted human demos have no robot feedback)
 - the log ends abruptly (power loss, crash mid-recording): everything before the cut is recovered and checked
@@ -210,6 +225,22 @@ handoff repair data/my_dataset --fleet reports/fleet/fleet.json --out data/my_da
 
 `REPAIR_LOG.json` lists every shifted episode and records a SHA-256 of the fleet report it came from. The command
 refuses a report made on a different dataset.
+
+**Audit a public dataset on Hugging Face** (a separate script, because it downloads; the `handoff` package itself
+never touches the network):
+
+```bash
+python tools/public_audit.py org/dataset_name          # one or more dataset ids
+python tools/public_audit.py --top 25 --skip-done      # the most-downloaded LeRobot datasets published by organizations
+```
+
+It downloads only `meta/info.json` and the `data/` tables, never the videos, runs fleet triage, and writes a one-page
+`audit.html` per dataset: what it found with example episodes, what it covers and doesn't, the data revision, each
+file's SHA-256 and a verdict fingerprint anyone can reproduce. It also writes a `badge.md` snippet for the dataset card,
+plus `index.html` and `summary.csv` across everything audited. A cached table from an earlier, larger run is removed,
+so the audit reads exactly the files it lists. For datasets with actions and no state, per-hand flags such as
+`observation.hands.valid` count a frame as tracked when any hand was found. Visibility stored inside the state vector
+(for example `left_hand.*.visible` dimensions) isn't read yet, and the report says so.
 
 The report counts usable hours per robot and lists what goes wrong most often. It reads message timestamps, plus
 numeric fields from the streams named in the spec. Those can be JSON-encoded, or ROS 2 messages in CDR as
@@ -232,9 +263,9 @@ decoded. If a stream's values can't be read, the report says which stream and wh
   dataset whose state is the previous command; that dataset documents this as intended, and the spec can say so.
 - **Human-hand data from phone video (a public phone-capture dataset, 116 episodes, Oct 31):** it counts
   the same 9,469 untracked frames of 28,019 (33.8%) that the dataset card documents, and flags the 23 episodes that
-  are more than half untracked. Before it read the validity flag, it called those frames idle and raised 22 lag flags
-  that were artifacts. Five lag flags remain, all on episodes that switch between the left and right hand mid-episode;
-  that dataset tracks one hand per frame, so a switch looks like a jump.
+  are more than half untracked. Before it read the validity and hand columns, it called those frames idle and raised
+  22 lag flags that were artifacts of placeholders and left/right hand switches. Now 92 episodes are kept, 24 go to
+  review (23 untracked, 1 borderline lag), and the lag is a steady 1-2 frames on 115 of 116.
 
 The lag check needs no training, so it gives the same answer on every machine.
 - **On real SO-100 data with offsets planted in 10 of 50 episodes:** it found all 10 and flagged no clean episode.

@@ -11,6 +11,7 @@ checks:
   duration:      {min_s: 3, max_s: 900}
   fps:           {min: 24}
   resolution:    {min_width: 640, min_height: 480}
+  # bitrate:     {min_mbps_1080p: 3}   # phones record 1080p at ~8-20 Mbps; 1-2 means re-encoded after capture
   black_frames:  {max_fraction: 0.05}
   frozen:        {max_fraction: 0.2}
   blur:          {min_sharpness: 60}
@@ -22,6 +23,9 @@ checks:
   duplicates:    {max_hamming: 6}
   # streams:     {required: [video, actions], max_start_offset_s: 0.05, max_gap_s: 0.25, min_coverage: 0.98}
   #              reads <clip>.streams.json: {"streams": {"video": [t0, t1, ...], "imu": [...], "actions": [...]}}
+  # Record3D .r3d clips (iPhone LiDAR) also carry a timestamp per frame and a depth confidence map:
+  # frame_timing: {max_dropped_fraction: 0.05, max_gap_s: 0.25}
+  # depth:        {min_high_confidence: 0.3}   # needs the depth extra (pyliblzfse) to read the maps
 
 rules:
   default_action: flag    # failed checks flag a clip for a person to review

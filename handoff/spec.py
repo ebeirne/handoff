@@ -13,6 +13,7 @@ KNOWN_CHECKS = {
     "duration",
     "fps",
     "resolution",
+    "bitrate",
     "black_frames",
     "frozen",
     "blur",
@@ -21,6 +22,8 @@ KNOWN_CHECKS = {
     "hands_visible",
     "duplicates",
     "streams",
+    "frame_timing",
+    "depth",
 }
 
 
