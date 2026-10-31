@@ -1,0 +1,42 @@
+# Handoff delivery spec: the buyer's written definition of "usable".
+# Thresholds below are starting points. Calibrate them on hand-labeled clips before relying on them.
+version: 1
+name: egocentric-manipulation-v1
+
+sampling:
+  fps: 2            # frames per second of video that the checks look at
+  max_frames: 600   # cap per clip
+
+checks:
+  duration:      {min_s: 3, max_s: 900}
+  fps:           {min: 24}
+  resolution:    {min_width: 640, min_height: 480}
+  black_frames:  {max_fraction: 0.05}
+  frozen:        {max_fraction: 0.2}
+  blur:          {min_sharpness: 60}
+  exposure:      {max_overexposed_area: 0.35, max_underexposed_area: 0.35, max_bad_frames: 0.2}
+  shake:         {max_jitter: 3.0}           # frame-to-frame jerk, pixels at 640 wide
+  hands_visible: {min_fraction: 0.5, detection_confidence: 0.1}  # needs --hand-model. MediaPipe finds ~85% of
+                                             # visible hands in factory footage, so a clip with hands always in
+                                             # view measures ~0.85, not 1.0 (docs/hands_eval_2026-10-30.md)
+  duplicates:    {max_hamming: 6}
+  # streams:     {required: [video, actions], max_start_offset_s: 0.05, max_gap_s: 0.25, min_coverage: 0.98}
+  #              reads <clip>.streams.json: {"streams": {"video": [t0, t1, ...], "imu": [...], "actions": [...]}}
+
+rules:
+  default_action: flag    # failed checks flag a clip for a person to review
+  reject_on: [readable]   # only these checks reject outright
+  downgrade_on: []        # failing only these keeps a clip, at a lower grade, e.g. [exposure, shake]
+
+# How many passed clips a person should spot-check: enough to be `confidence` sure that fewer than
+# `max_defect_rate` of passed clips are bad, if none of the sampled ones are.
+acceptance:
+  confidence: 0.95
+  max_defect_rate: 0.05
+
+# Optional: compare passing clips against what was ordered.
+# coverage:
+#   metadata: metadata.csv   # columns: clip, task (path relative to the clips folder or this spec)
+#   key: clip
+#   field: task
+#   targets: {pour: 20, wipe: 20, fold: 20}

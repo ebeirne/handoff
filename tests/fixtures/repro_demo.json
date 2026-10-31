@@ -1,0 +1,249 @@
+{
+  "about": "Laptop reference for .github/workflows/repro.yml: 4 Egocentric-10K clips checked with handoff/example_spec.yaml. Recorded Oct 30, 2026 on Windows 10 (Ryzen 9 7940HS); the offline Linux container on the same laptop gave the same fingerprint.",
+  "source": "https://huggingface.co/datasets/Voxel51/Egocentric_10K_subset/resolve/main/data/",
+  "clips": {
+    "factory051_worker001_00000.mp4": "f27e6b8ef4534e7e6b5320ea833ccaf58680aaf4187a0c2afaf3e2c1c1e36242",
+    "factory051_worker001_00026.mp4": "9f9da06a34342e57967a2610b22c48966e29585f8b56858b08aeed1d4323de0f",
+    "factory051_worker001_00051.mp4": "2fa368b95d5ce8863beb43931f23fde81ee618c3189bab1e6c73103dcc68174e",
+    "factory051_worker008_00051.mp4": "4bfb28bcc39656fd1c715a9fe80fd5c12c69c134c208ed7f3785f286f943e085"
+  },
+  "hand_model_sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1",
+  "spec": "handoff/example_spec.yaml",
+  "fingerprint": "e20e8648aea80d7928cac85cc8f21f5e11f24f1909dc62389853834941dc59da",
+  "verdicts": {
+    "factory051_worker001_00000.mp4": "pass",
+    "factory051_worker001_00026.mp4": "pass",
+    "factory051_worker001_00051.mp4": "pass",
+    "factory051_worker008_00051.mp4": "flag"
+  },
+  "checks": {
+    "factory051_worker001_00000.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.73333333333332,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 804.347079270304,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.019444444444444445,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 1.1468958513523417,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.7333333333333333,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker001_00026.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 180.0,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1082.045787980407,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.2582558575623808,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.9611111111111111,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker001_00051.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.8,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1215.6686393113691,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.005555555555555556,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.3696078710823874,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.9083333333333333,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker008_00051.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.93333333333334,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 2024.9608502156389,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.030555555555555555,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.4615061494317698,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.24722222222222223,
+        "threshold": ">= 50%",
+        "passed": false
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    }
+  }
+}

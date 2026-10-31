@@ -1,0 +1,42 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: System libraries for OpenCV
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libegl1 libgles2
+      - name: Install
+        run: pip install -e ".[dev,hands,fleet]"
+      - name: Tests
+        run: pytest -q
+      - name: License allowlist
+        run: python tools/check_licenses.py hands fleet
+
+  docker:
+    # The offline container is how customers run Handoff on their own machines; check it builds and triages logs.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Make a small fleet of logs (3 clean sessions, 1 with a late camera)
+        run: |
+          pip install -e ".[fleet]" pytest
+          python -c "import sys; sys.path.insert(0, 'tests'); from pathlib import Path; from test_fleet import _session; d = Path('ci_logs'); d.mkdir(); [_session(d / f'ok_{i}.mcap', seed=i) for i in range(3)]; _session(d / 'late.mcap', seed=9, camera_start=2.5)"
+          mkdir -p ci_out && chmod 777 ci_out
+      - name: Build the image
+        run: docker build -t handoff:ci .
+      - name: Triage the logs inside the container, networking off
+        run: docker run --rm --network none -v "$PWD/ci_logs:/logs:ro" -v "$PWD/ci_out:/out" handoff:ci fleet /logs --out /out
+      - name: Check the verdicts
+        run: python -c "import json; s = json.load(open('ci_out/fleet.json'))['summary']; print(s); assert (s['keep'], s['review'], s['drop']) == (3, 1, 0)"

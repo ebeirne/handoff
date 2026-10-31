@@ -1,0 +1,13 @@
+# Handoff fleet spec: what a usable robot session looks like. Every setting is optional.
+fleet:
+  required: [/joint_states, /action, /camera/front]   # sessions missing one of these are dropped
+  expected_rate_hz: {/joint_states: 30, /action: 30, /camera/front: 15}
+  min_rate_fraction: 0.9      # flag a stream logging below 90% of its expected rate
+  max_gap_s: 0.5              # flag dropouts longer than half a second
+  max_start_offset_s: 1.0     # flag a stream that starts more than 1 s late
+  max_end_offset_s: 1.0       # flag a stream that stops more than 1 s early
+  min_duration_s: 3.0         # drop sessions shorter than 3 s
+  idle: {stream: /joint_states, field: position, max_idle_fraction: 0.5}
+  sync: {state: /joint_states, state_field: position, action: /action, action_field: position, max_offset_frames: 3}
+  # Add state_from_commands: true to sync when the state is the commanded position on purpose (for example
+  # retargeted human demos with no robot feedback); otherwise a state that copies the commands is flagged.

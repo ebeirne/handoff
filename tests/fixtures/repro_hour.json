@@ -1,0 +1,1193 @@
+{
+  "about": "Laptop reference for .github/workflows/repro.yml: all 20 Egocentric-10K subset clips (one hour, 1080p) checked with handoff/example_spec.yaml. Recorded Oct 30, 2026 on Windows 10 (Ryzen 9 7940HS).",
+  "source": "https://huggingface.co/datasets/Voxel51/Egocentric_10K_subset/resolve/main/data/",
+  "clips": {
+    "factory051_worker001_00000.mp4": "f27e6b8ef4534e7e6b5320ea833ccaf58680aaf4187a0c2afaf3e2c1c1e36242",
+    "factory051_worker001_00026.mp4": "9f9da06a34342e57967a2610b22c48966e29585f8b56858b08aeed1d4323de0f",
+    "factory051_worker001_00051.mp4": "2fa368b95d5ce8863beb43931f23fde81ee618c3189bab1e6c73103dcc68174e",
+    "factory051_worker002_00000.mp4": "b0e8f5e8651fee1eb9bbb6084490604fc6b22aabbb110332dab026e78e2cb948",
+    "factory051_worker002_00026.mp4": "b9e4bcad626b3225b401aeb2587c6fd3d46b931ffe2e6af3990c0966b76bea2b",
+    "factory051_worker002_00051.mp4": "027f18f7c1a22aabacd4fb880052710308fde26032ecd523d3df833074fd05dd",
+    "factory051_worker003_00000.mp4": "38a8d8c47a83762184bff0f33a83fbcd21f84ccc16873b704bfd99e2359acb53",
+    "factory051_worker003_00026.mp4": "ddd5202563f366e83112610b2f49451c539cba46e249938bfd5cb58ce4a358d2",
+    "factory051_worker003_00051.mp4": "49e12d9a2bc74367ef69246e8b93d4339faf46c609e438c2cabeffe470057bc7",
+    "factory051_worker004_00000.mp4": "b47b0a356a8e5489419d12e2762a78228b3be6edad21585e6b22f69f876b4b6f",
+    "factory051_worker004_00026.mp4": "b5a6ddeeda4d76c97ef52c04ddd646382183738aef33452744414ec41cb7d8f8",
+    "factory051_worker004_00051.mp4": "caa9511d864f21ceb682099b2842bb4528f2850ec6bb387cde9e1e1fc6e9277b",
+    "factory051_worker005_00000.mp4": "f9062922a6aa0e213df6dcd20594d3ce8e3c92896810a69842719ee1fb0b5cf1",
+    "factory051_worker005_00051.mp4": "5acd49ea7fd9c9878918d27f7a77018d2e7dc4053485b152a4702b98fe6cb6f1",
+    "factory051_worker006_00000.mp4": "a7729dd384a67e5e2b1fb9a6ecf28cc379412e7ecf309bf711e675cc8a8c0698",
+    "factory051_worker006_00051.mp4": "9c8c3053ef3a29a94570cc4834e77f9030e96cd0ea844235544846a77d8ec785",
+    "factory051_worker007_00000.mp4": "27b4ab636850626138ab438ccc341755d8313f2dff43028c187f7d7431b897a8",
+    "factory051_worker007_00051.mp4": "d575f40eae186455ce74537c534f9dc0f470d4723d6f849b86a5385ac65cd13c",
+    "factory051_worker008_00000.mp4": "082ea007898526a1cfb0ea02a0dc5158bff2503bc6cbed69d5fa33bf447feae6",
+    "factory051_worker008_00051.mp4": "4bfb28bcc39656fd1c715a9fe80fd5c12c69c134c208ed7f3785f286f943e085"
+  },
+  "hand_model_sha256": "fbc2a30080c3c557093b5ddfc334698132eb341044ccee322ccf8bcf3607cde1",
+  "spec": "handoff/example_spec.yaml",
+  "fingerprint": "51d14d41f7d95127c0d7bb245f61b0fa951225a1bebbcbd4983f8ae386737b73",
+  "verdicts": {
+    "factory051_worker001_00000.mp4": "pass",
+    "factory051_worker001_00026.mp4": "pass",
+    "factory051_worker001_00051.mp4": "pass",
+    "factory051_worker002_00000.mp4": "pass",
+    "factory051_worker002_00026.mp4": "pass",
+    "factory051_worker002_00051.mp4": "pass",
+    "factory051_worker003_00000.mp4": "pass",
+    "factory051_worker003_00026.mp4": "pass",
+    "factory051_worker003_00051.mp4": "pass",
+    "factory051_worker004_00000.mp4": "pass",
+    "factory051_worker004_00026.mp4": "pass",
+    "factory051_worker004_00051.mp4": "pass",
+    "factory051_worker005_00000.mp4": "pass",
+    "factory051_worker005_00051.mp4": "pass",
+    "factory051_worker006_00000.mp4": "pass",
+    "factory051_worker006_00051.mp4": "pass",
+    "factory051_worker007_00000.mp4": "flag",
+    "factory051_worker007_00051.mp4": "pass",
+    "factory051_worker008_00000.mp4": "pass",
+    "factory051_worker008_00051.mp4": "flag"
+  },
+  "checks": {
+    "factory051_worker001_00000.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.73333333333332,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 804.347079270304,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.019444444444444445,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 1.1468958513523417,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.7333333333333333,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker001_00026.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 180.0,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1082.045787980407,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.2582558575623808,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.9611111111111111,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker001_00051.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.8,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1215.6686393113691,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.005555555555555556,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.3696078710823874,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.9083333333333333,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker002_00000.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 180.0,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 2684.93937728685,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.2921320486286328,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.9972222222222222,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker002_00026.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.83333333333334,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1841.5525147935184,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.3942121979869484,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.9611111111111111,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker002_00051.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.83333333333334,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1834.6183040374663,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.3520628253309829,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.9777777777777777,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker003_00000.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.73333333333332,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1780.7623740663503,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.2777733993663255,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.9555555555555556,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker003_00026.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 180.0,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 866.3612198301528,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.2525923870382812,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.9805555555555555,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker003_00051.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.76666666666668,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 936.4268199131624,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.8170817269100565,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.775,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker004_00000.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.93333333333334,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1611.9296032359748,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.49778333966234095,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.8638888888888889,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker004_00026.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.93333333333334,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1050.4649079530693,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.5111087723564793,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.8138888888888889,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker004_00051.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.86666666666667,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 482.1772798264775,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.002777777777777778,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.8977714727734776,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.8416666666666667,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker005_00000.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.76666666666668,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1037.3034515047334,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.2606421322098309,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.65,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker005_00051.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 180.0,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 2675.5791963481665,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.31649371212029165,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.8583333333333333,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker006_00000.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.96666666666667,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1057.9184740634023,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.002777777777777778,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.87710414481435,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.7277777777777777,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker006_00051.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.93333333333334,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 558.7686739253104,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.6340371199972407,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.9111111111111111,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker007_00000.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.76666666666668,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 1592.3267790110458,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.22986824232642628,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.4722222222222222,
+        "threshold": ">= 50%",
+        "passed": false
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker007_00051.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.86666666666667,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 958.5919781644845,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.0,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.6304834343301371,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.9861111111111112,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker008_00000.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.9,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 2143.31796152696,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.002777777777777778,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.33245342708913433,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.7722222222222223,
+        "threshold": ">= 50%",
+        "passed": true
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    },
+    "factory051_worker008_00051.mp4": {
+      "readable": {
+        "value": null,
+        "threshold": "",
+        "passed": true
+      },
+      "duration": {
+        "value": 179.93333333333334,
+        "threshold": "3-900s",
+        "passed": true
+      },
+      "fps": {
+        "value": 30.0,
+        "threshold": ">= 24",
+        "passed": true
+      },
+      "resolution": {
+        "value": 2073600.0,
+        "threshold": ">= 640x480",
+        "passed": true
+      },
+      "black_frames": {
+        "value": 0.0,
+        "threshold": "<= 5%",
+        "passed": true
+      },
+      "frozen": {
+        "value": 0.0,
+        "threshold": "<= 20%",
+        "passed": true
+      },
+      "blur": {
+        "value": 2024.9608502156389,
+        "threshold": ">= 60",
+        "passed": true
+      },
+      "exposure": {
+        "value": 0.030555555555555555,
+        "threshold": "<= 20% of frames with over 35% or under 35% clipped",
+        "passed": true
+      },
+      "shake": {
+        "value": 0.4615061494317698,
+        "threshold": "<= 3.0px",
+        "passed": true
+      },
+      "hands_visible": {
+        "value": 0.24722222222222223,
+        "threshold": ">= 50%",
+        "passed": false
+      },
+      "duplicates": {
+        "value": null,
+        "threshold": "> 6",
+        "passed": true
+      }
+    }
+  }
+}

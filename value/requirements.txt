@@ -1,0 +1,10 @@
+gym-pusht==0.1.8
+gymnasium==1.4.0
+matplotlib==3.11.2
+numpy==2.5.4
+opencv-python==4.14.0.94
+pyarrow==26.0.0
+pygame==2.6.1
+pymunk==6.11.1
+shapely==2.2.0
+torch==2.11.0+cu128

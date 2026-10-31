@@ -1,0 +1,55 @@
+name: cross-machine fingerprint
+
+# Checks a delivery on a GitHub-hosted Linux machine and compares it with the laptop reference in tests/fixtures/:
+# repro_demo.json (4 clips, weekly) or repro_hour.json (all 20 clips, one hour, on demand). The two-party promise
+# depends on a second machine reaching the same verdicts.
+
+on:
+  workflow_dispatch:
+    inputs:
+      fixture:
+        description: "Laptop reference to compare with"
+        type: choice
+        options: [repro_demo, repro_hour]
+        default: repro_demo
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  repro:
+    runs-on: ubuntu-latest
+    env:
+      FIXTURE: tests/fixtures/${{ inputs.fixture || 'repro_demo' }}.json
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: System libraries for OpenCV and MediaPipe
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0 libegl1 libgles2
+      - name: Install
+        run: pip install -e ".[hands]"
+      - name: Fetch the delivery (public Egocentric-10K clips) and the hand model
+        run: |
+          mkdir -p delivery models
+          src=$(python -c "import json; print(json.load(open('$FIXTURE'))['source'])")
+          for f in $(python -c "import json; print(' '.join(json.load(open('$FIXTURE'))['clips']))"); do
+            curl -sSfL -o "delivery/$f" "$src$f"
+          done
+          curl -sSfL -o models/hand_landmarker.task \
+            https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task
+          cp handoff/example_spec.yaml delivery/spec.yaml
+      - name: CPU
+        run: lscpu | grep -E "Model name|^CPU\(s\)" | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Check the delivery
+        run: handoff check delivery --spec delivery/spec.yaml --hand-model models/hand_landmarker.task --out out --workers 0 --quiet
+      - name: Compare with the laptop
+        run: python tools/check_repro.py out/results.json "$FIXTURE" --clips delivery --hand-model models/hand_landmarker.task | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: repro-results
+          path: out/results.json
