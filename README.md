@@ -30,16 +30,31 @@ acceptance review, coverage against the order, and repair.
 ## Quick start
 
 ```bash
+git clone https://github.com/ebeirne/handoff.git && cd handoff
 python -m venv .venv
 .venv\Scripts\activate          # Windows; on macOS/Linux: source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -e ".[fleet]"
+```
 
+**Check your own data:**
+
+```bash
+python tools/public_audit.py your-org/your-dataset   # a LeRobot dataset on Hugging Face: one-page report card, tables only
+handoff fleet path/to/dataset_or_logs                # a local LeRobot dataset, or a folder of MCAP / ROS 2 logs
+```
+
+**Or watch it catch planted defects** in synthetic video clips:
+
+```bash
 handoff demo-clips data/demo                 # synthetic clips with known defects
 handoff init-spec data/demo/spec.yaml        # an example spec to edit
 handoff check data/demo --spec data/demo/spec.yaml --out reports/demo
 ```
 
 Open `reports/demo/report.html`.
+
+Would you rather have it run for you, or on raw data before it's published? The first check is free:
+[get in touch](https://www.linkedin.com/in/ethanbeirne/).
 
 ## What it checks
 
