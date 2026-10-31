@@ -7,6 +7,8 @@ person to look, and why. It also reports whether the delivery covers what was or
 **Status: v0.1 demo.** The checks are tested on synthetic clips and one hour of real footage, and the hand detector
 on 10,000 labeled frames. The thresholds are starting points (see "Accuracy" below).
 
+**Findings:** [we checked 6,640 episodes of public robot training data](docs/public_samples_audit_2026-10.md). Published samples are clean (about 1% flagged); the defects live in raw capture.
+
 Beyond checking deliveries, the same tool covers the rest of robot data operations (see "Robot data operations"
 below):
 
