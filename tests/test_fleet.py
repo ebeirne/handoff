@@ -182,6 +182,45 @@ def test_fleet_stops_on_a_dataset_without_state_or_action(tmp_path):
     assert main(["fleet", str(root), "--out", str(tmp_path / "out")]) == 2  # an error, not 2 dropped episodes
 
 
+def test_fleet_reads_tracked_hands_with_actions_as_per_frame_changes(tmp_path):
+    """Some hand-tracking datasets have no observation.state: `observation.left_hand` beside `action.left_hand_delta`,
+    the change per frame. They load, the changes are summed back into a path, and a lagged episode is still found."""
+    pa = pytest.importorskip("pyarrow")
+    import pyarrow.parquet as pq
+
+    root = tmp_path / "hands"
+    (root / "meta").mkdir(parents=True)
+    (root / "data" / "chunk-000").mkdir(parents=True)
+    (root / "meta" / "info.json").write_text(json.dumps({"fps": 30, "robot_type": "human"}), encoding="utf-8")
+    n, cols = 200, {k: [] for k in ("episode_index", "frame_index", "timestamp", "observation.left_hand",
+                                    "observation.right_hand", "observation.camera_pose", "action.left_hand_delta",
+                                    "action.right_hand_delta", "action.camera_delta")}
+    for e, delay in enumerate([3, 3, 3, 3, 3, 12]):
+        state, act = _joints(n, seed=e, delay=delay)
+        step = np.diff(act, axis=0, prepend=act[:1])
+        half = state.shape[1] // 2
+        cols["episode_index"] += [e] * n
+        cols["frame_index"] += list(range(n))
+        cols["timestamp"] += (np.arange(n) / RATE).tolist()
+        cols["observation.left_hand"] += state[:, :half].tolist()
+        cols["observation.right_hand"] += state[:, half:].tolist()
+        cols["observation.camera_pose"] += np.zeros((n, 6)).tolist()  # no matching action part: left out
+        cols["action.left_hand_delta"] += step[:, :half].tolist()
+        cols["action.right_hand_delta"] += step[:, half:].tolist()
+        cols["action.camera_delta"] += np.zeros((n, 6)).tolist()
+    pq.write_table(pa.table(cols), root / "data" / "chunk-000" / "file-000.parquet")
+
+    empty = pa.table({k: pa.array([], type=pq.read_table(root / "data" / "chunk-000" / "file-000.parquet").schema.field(k).type)
+                      for k in cols})
+    pq.write_table(empty, root / "data" / "chunk-000" / "episode_000006.parquet")  # an episode file with no rows
+
+    spec = lerobot_defaults(load_fleet_spec(None))
+    r = _by_name(triage(load_logs(root, spec), spec))
+    assert [r[f"episode_{i:06d}"]["verdict"] for i in range(5)] == ["keep"] * 5
+    assert {i["check"] for i in r["episode_000005"]["issues"]} == {"action_lag"}
+    assert r["episode_000006"]["verdict"] == "drop" and "has no rows" in r["episode_000006"]["issues"][0]["message"]
+
+
 def test_lag_limit_widens_where_the_lag_estimate_itself_is_noisy(tmp_path):
     """Where every episode gives the same lag, 3 frames off it is flagged. Where the estimate spreads from episode to
     episode (DROID's does), ordinary spread isn't flagged; a real outlier still is."""

@@ -12,6 +12,7 @@ summary counts usable hours per robot.
 from __future__ import annotations
 
 import json
+import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -213,11 +214,18 @@ def salvage_mcap(path: str | Path, signals: dict[str, str | None] | None = None,
 def _lerobot_columns(cols: set[str]) -> dict[str, list[str]]:
     """The parquet columns that make up the state and the action. Most datasets have one `observation.state` and one
     `action` column. Some (Unitree's G1 sets) split both by body part, `observation.state.left_arm` beside
-    `action.left_arm`; then the parts both sides have are joined, in the same order on each side."""
+    `action.left_arm`; then the parts both sides have are joined, in the same order on each side. Datasets of tracked
+    hands may record the action as the change per frame, `observation.left_hand` beside `action.left_hand_delta`;
+    those pair too, and `load_lerobot` sums the changes back into a path."""
     parts = sorted(c[len("observation.state."):] for c in cols
                    if c.startswith("observation.state.") and f"action.{c[len('observation.state.'):]}" in cols)
-    return {"observation.state": ["observation.state"] if "observation.state" in cols else [f"observation.state.{p}" for p in parts],
-            "action": ["action"] if "action" in cols else [f"action.{p}" for p in parts]}
+    state = ["observation.state"] if "observation.state" in cols else [f"observation.state.{p}" for p in parts]
+    action = ["action"] if "action" in cols else [f"action.{p}" for p in parts]
+    if not state and not action:
+        parts = sorted(c[len("observation."):] for c in cols
+                       if c.startswith("observation.") and f"action.{c[len('observation.'):]}_delta" in cols)
+        state, action = [f"observation.{p}" for p in parts], [f"action.{p}_delta" for p in parts]
+    return {"observation.state": state, "action": action}
 
 
 def _joined(table, names: list[str]) -> np.ndarray:
@@ -260,8 +268,13 @@ def load_lerobot(root: str | Path) -> list[Session]:
     info = json.loads((root / "meta" / "info.json").read_text(encoding="utf-8"))
     robot = info.get("robot_type") or root.name
     rows: dict[int, dict[str, list]] = defaultdict(lambda: defaultdict(list))
+    empty: dict[int, str] = {}  # episodes whose data file has no rows: reported, not skipped
     for f in sorted((root / "data").rglob("*.parquet")):
         table = pq.read_table(f)
+        if table.num_rows == 0:
+            if m := re.fullmatch(r"episode_(\d+)", f.stem):
+                empty[int(m.group(1))] = f.name
+            continue
         cols = set(table.column_names)
         layout = _lerobot_columns(cols)
         if not layout["observation.state"] and not layout["action"]:
@@ -273,8 +286,10 @@ def load_lerobot(root: str | Path) -> list[Session]:
         if valid is None and not layout["observation.state"]:  # actions from hand tracking, flagged per hand
             valid = _hands_found(table, cols)
         track = _tracked_by(table, cols, layout["observation.state"])
+        delta = bool(layout["action"]) and all(n.endswith("_delta") for n in layout["action"])
         for i in np.unique(ep):
             idx = np.where(ep == i)[0]
+            rows[int(i)]["delta"] = [delta]
             rows[int(i)]["t"].extend(ts[idx].tolist())
             for k, arr in series.items():
                 rows[int(i)][k].extend(arr[idx].tolist())
@@ -289,15 +304,19 @@ def load_lerobot(root: str | Path) -> list[Session]:
         streams = {}
         for k in ("observation.state", "action"):
             if rows[i].get(k):
-                vals = np.asarray(rows[i][k], dtype=float)
-                streams[k] = Stream(k, t[order], (vals.reshape(len(t), -1))[order])
+                vals = np.asarray(rows[i][k], dtype=float).reshape(len(t), -1)[order]
+                if k == "action" and rows[i]["delta"][0]:  # per-frame changes, summed into a path within the episode
+                    vals = np.cumsum(vals, axis=0)
+                streams[k] = Stream(k, t[order], vals)
         primary = "observation.state" if "observation.state" in streams else "action"
         if rows[i].get("valid") and primary in streams:
             streams[primary].valid = np.asarray(rows[i]["valid"], dtype=bool)[order]
         if rows[i].get("track") and "observation.state" in streams:
             streams["observation.state"].track = np.asarray(rows[i]["track"], dtype=float).reshape(len(t), -1)[order]
         sessions.append(Session(f"episode_{i:06d}", robot, streams))
-    return sessions
+    for i in sorted(set(empty) - set(rows)):
+        sessions.append(Session(f"episode_{i:06d}", robot, {}, error=f"its data file {empty[i]} has no rows"))
+    return sorted(sessions, key=lambda s: s.name)
 
 
 def lerobot_defaults(spec: dict) -> dict:
@@ -482,7 +501,9 @@ def check_session(s: Session, spec: dict) -> tuple[list[Issue], dict]:
             moving = float(np.percentile(speed, 90))
             frac = float(np.mean(speed < max(0.05 * moving, 1e-9))) if moving > 1e-9 else 1.0
             facts["idle_fraction"] = round(frac, 3)
-            if moving <= 1e-9 or frac > 0.95:
+            if not np.any(st.values):  # a stream that is zero throughout was never filled in, not a robot at rest
+                issues.append(Issue("drop", "no_motion", f"{idle['stream']} is zero in every frame: it looks unrecorded"))
+            elif moving <= 1e-9 or frac > 0.95:
                 issues.append(Issue("drop", "no_motion", f"{idle['stream']} barely moves in this session"))
             elif frac > idle.get("max_idle_fraction", 0.5):
                 issues.append(Issue("review", "mostly_idle", f"idle {frac:.0%} of the time"))
