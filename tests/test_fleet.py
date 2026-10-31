@@ -182,6 +182,26 @@ def test_fleet_stops_on_a_dataset_without_state_or_action(tmp_path):
     assert main(["fleet", str(root), "--out", str(tmp_path / "out")]) == 2  # an error, not 2 dropped episodes
 
 
+def test_short_episodes_are_judged_against_the_dataset_not_a_fixed_floor(tmp_path):
+    """Language Table's episodes are a couple of seconds long by design. Without a spec, "too short" means short for
+    this dataset; a spec's own min_duration_s is kept as written."""
+    from handoff.cli import main
+
+    root = tmp_path / "short"
+    _lerobot(root, delays=[3] * 6, n=40)  # 1.3 s episodes
+    out = tmp_path / "out"
+    assert main(["fleet", str(root), "--out", str(out)]) == 0
+    report = json.loads((out / "fleet.json").read_text(encoding="utf-8"))
+    assert not [i for s in report["sessions"] for i in s["issues"] if i["check"] == "too_short"]
+    assert report["spec"]["min_duration_s"] < 1.0
+
+    spec = tmp_path / "spec.yaml"
+    spec.write_text("min_duration_s: 3\n", encoding="utf-8")
+    assert main(["fleet", str(root), "--spec", str(spec), "--out", str(tmp_path / "out2")]) == 0
+    report = json.loads((tmp_path / "out2" / "fleet.json").read_text(encoding="utf-8"))
+    assert report["summary"]["drop"] == 6
+
+
 def test_fleet_requires_only_the_streams_a_lerobot_dataset_records(tmp_path):
     """Hand-pose datasets from human video often have an action stream and no robot state. That's the format, so the
     episodes aren't dropped as missing a stream; the report says what isn't recorded. A spec's own list still holds."""

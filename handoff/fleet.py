@@ -309,13 +309,20 @@ def lerobot_defaults(spec: dict) -> dict:
     return spec
 
 
-def lerobot_fit(spec: dict, sessions: list[Session]) -> dict:
+def lerobot_fit(spec: dict, sessions: list[Session], fit_duration: bool = False) -> dict:
     """Require only the streams this dataset records. Human-video datasets often have no robot state, or no action:
-    that's the format, not a stream missing from every episode. The report lists what the dataset doesn't record."""
+    that's the format, not a stream missing from every episode. The report lists what the dataset doesn't record.
+
+    With `fit_duration` (no spec was given), "too short" is judged against the dataset's own episodes, as the lag is:
+    some datasets are a couple of seconds per episode by design (Language Table), and a fixed 3 s floor would drop
+    most of them. An episode under a quarter of the dataset's median length is still too short."""
     present = {name for s in sessions for name in s.streams}
     spec = dict(spec)
     spec["absent_streams"] = [r for r in spec["required"] if r not in present]
     spec["required"] = [r for r in spec["required"] if r in present]
+    lengths = [s.duration for s in sessions if s.streams and not s.error]
+    if fit_duration and lengths:
+        spec["min_duration_s"] = min(spec["min_duration_s"], round(float(np.median(lengths)) / 4, 2))
     return spec
 
 

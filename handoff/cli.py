@@ -117,7 +117,7 @@ def _cmd_fleet(args: argparse.Namespace) -> int:
         print(f"error: no .mcap files or LeRobot episodes in {logs}", file=sys.stderr)
         return 2
     if lerobot and not required_by_user:  # a spec's own `required` list is kept as written
-        spec = lerobot_fit(spec, sessions)
+        spec = lerobot_fit(spec, sessions, fit_duration=args.spec is None)
     report = triage(sessions, spec)
     report["source"] = str(logs.resolve())
     paths = write_outputs(report, args.out)

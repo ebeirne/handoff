@@ -235,7 +235,7 @@ def audit(repo: str, out_root: Path, data_root: Path, max_mb: float, contact: st
         source = fetch(repo, data_root, max_mb)
         spec = lerobot_defaults(load_fleet_spec(None))
         sessions = load_logs(source["local"], spec)
-        spec = lerobot_fit(spec, sessions)
+        spec = lerobot_fit(spec, sessions, fit_duration=True)
         report = triage(sessions, spec)
     except Exception as exc:  # one bad dataset is a line in the summary, not a failed run
         out.mkdir(parents=True, exist_ok=True)
