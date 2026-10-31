@@ -82,6 +82,10 @@ The frame rate `fps` judges is the one actually recorded, read from the timestam
 Record3D files say 30 fps and record a steady 15). On a public raw iPhone LiDAR dataset, `frame_timing` flags a clip that records
 15 fps for 18 seconds and then 30, which plays normally and which no image check can see.
 
+For a whole catalog, `python tools/r3d_index.py path/to/clips --out index.csv` writes one row per clip (the rate
+actually recorded and any switch, dropped frames, stalls, and measured depth confidence) without decoding the
+video. `--compare vendor_index.csv` lists the clips where a vendor's own index disagrees with what was measured.
+
 Checks run on frames sampled at `sampling.fps` (default 2 per second), downscaled to 640 pixels wide. `shake` also
 looks at the two frames right after each sample point, so it measures motion 33 ms apart rather than half a second
 apart.
