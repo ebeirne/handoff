@@ -1,5 +1,5 @@
 """Command line: `handoff check`, `init-spec`, `demo-clips`, `label-sheet`, `accuracy`, `fleet`, `repair`,
-`init-fleet-spec`, `watch`, `passport`, `verify-passport` and `console`."""
+`init-fleet-spec`, `watch`, `passport`, `verify-passport`, `verify-card` and `console`."""
 
 from __future__ import annotations
 
@@ -228,6 +228,19 @@ def _cmd_verify_passport(args: argparse.Namespace) -> int:
     return 1
 
 
+def _cmd_verify_card(args: argparse.Namespace) -> int:
+    from .verified import verify_card
+
+    try:
+        card = json.loads(Path(args.card).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    ok, message = verify_card(card)
+    print(("VERIFIED: " if ok else "NOT VERIFIED: ") + message)
+    return 0 if ok else 1
+
+
 def _cmd_console(args: argparse.Namespace) -> int:
     from .console import build, to_html
 
@@ -311,6 +324,10 @@ def main(argv: list[str] | None = None) -> int:
     verify_p.add_argument("passport", help="passport.json")
     verify_p.add_argument("folder", help="the delivery folder")
     verify_p.set_defaults(func=_cmd_verify_passport)
+
+    verify_c = sub.add_parser("verify-card", help="check that a report card was signed by Handoff and is unchanged")
+    verify_c.add_argument("card", help="a verified card (JSON)")
+    verify_c.set_defaults(func=_cmd_verify_card)
 
     console = sub.add_parser("console", help="one page over checks, fleet triage, repairs, passports and watch logs")
     console.add_argument("--check", action="append", help="results.json from `handoff check` (repeatable)")

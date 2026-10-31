@@ -19,6 +19,7 @@ below):
 | `handoff repair` | write a re-aligned copy of a LeRobot dataset whose actions lag the state, from a fleet report |
 | `handoff watch` | check clips as they land in an upload folder, while the collector can still re-shoot |
 | `handoff passport` | seal a delivery with file hashes, consent coverage, licence and acceptance results |
+| `handoff verify-card` | confirm a report card was signed by Handoff and hasn't changed since |
 | `handoff console` | one page over all of the above |
 
 **Related project:** [rdq](https://github.com/s1g6r/rdq) (Apache-2.0) audits LeRobot datasets and raw video
@@ -56,6 +57,23 @@ Open `reports/demo/report.html`.
 Would you rather have it run for you, or on raw data before it's published? The first check is free:
 [get in touch](https://www.linkedin.com/in/ethanbeirne/).
 
+## Run it yourself, or have it done
+
+Everything in this repository is free to run, change and ship (Apache-2.0). What Handoff sells is what the code can't
+do by itself: time, judgment, and a result other people will trust.
+
+| | Run it yourself | Have Handoff do it |
+|---|---|---|
+| Checks on your data | install, write a spec, tune the thresholds to your data, read the reports | results in 2 days, with the spec tuned to your data and to what your buyer accepts |
+| A report card buyers trust | a self-check: your own word | **verified**: signed by Handoff after checking the raw data behind the sample too; anyone can confirm it offline with `handoff verify-card` ($500) |
+| Accepting a vendor's delivery | decide from the reports yourself | a verdict per episode, what's repairable, and an accepted list you can invoice against ($1,000 per delivery, up to 100 hours) |
+| Raw capture, batch by batch | run `handoff check` on each batch | per collector and session, before your own review ($750 a batch; the first one free) |
+| iPhone LiDAR catalogs | read the timestamps and depth maps of every clip | a corrected index: true frame rates, rate switches, depth confidence, and where your own index is wrong ($1,000 up to 100 hours) |
+| Fixing what's broken | `handoff repair` re-aligns lagged episodes | a week on your recordings: where the data breaks, what can be repaired instead of re-recorded, and a plan ($3,000) |
+
+A verified card can't be produced with this code alone: it carries a signature only Handoff's private key makes, and
+changing any number in it breaks the signature.
+
 ## What it checks
 
 | Check | Flags a clip when | Parameters |
@@ -82,9 +100,9 @@ The frame rate `fps` judges is the one actually recorded, read from the timestam
 Record3D files say 30 fps and record a steady 15). On a public raw iPhone LiDAR dataset, `frame_timing` flags a clip that records
 15 fps for 18 seconds and then 30, which plays normally and which no image check can see.
 
-For a whole catalog, `python tools/r3d_index.py path/to/clips --out index.csv` writes one row per clip (the rate
-actually recorded and any switch, dropped frames, stalls, and measured depth confidence) without decoding the
-video. `--compare vendor_index.csv` lists the clips where a vendor's own index disagrees with what was measured.
+For a whole catalog, Handoff can re-index every clip from the data itself (the rate actually recorded and any switch,
+dropped frames, stalls, measured depth confidence) and list where your own index disagrees; see "Run it yourself, or
+have it done" above.
 
 Checks run on frames sampled at `sampling.fps` (default 2 per second), downscaled to 640 pixels wide. `shake` also
 looks at the two frames right after each sample point, so it measures motion 33 ms apart rather than half a second

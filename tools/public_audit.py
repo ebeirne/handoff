@@ -178,8 +178,9 @@ def badge(source: dict, report: dict) -> str:
     flagged = (s["review"] + s["drop"]) / max(s["sessions"], 1)
     color = "brightgreen" if flagged <= 0.05 else "yellow" if flagged <= 0.2 else "orange"
     label = urllib.parse.quote(f"{s['keep']}/{s['sessions']} episodes clean", safe="").replace("%20", "_")
-    return (f"[![Handoff audit: {s['keep']} of {s['sessions']} episodes clean]"
-            f"(https://img.shields.io/badge/Handoff_audit-{label}-{color})]({{report_url}})\n")
+    # "self-check": anyone can run this. Only a card Handoff signed (handoff verify-card) is "verified".
+    return (f"[![Handoff self-check: {s['keep']} of {s['sessions']} episodes clean]"
+            f"(https://img.shields.io/badge/Handoff_self--check-{label}-{color})]({{report_url}})\n")
 
 
 def report_card(source: dict, report: dict, fp: str, contact: str) -> str:
@@ -223,10 +224,13 @@ def report_card(source: dict, report: dict, fp: str, contact: str) -> str:
 ({source['tables']} table(s), {source['mb']} MB; SHA-256 of each file in audit.json).<br>
 Tool: Handoff v{esc(__version__)}, <span class="mono">handoff fleet &lt;dataset folder&gt;</span>.<br>
 Verdict fingerprint: <span class="mono">{fp}</span>. The same data and tool give the same fingerprint on any machine.</p>
+<p class="muted">This card is a self-check: anyone can produce it with the open-source tool. A Handoff-verified card is
+signed by Handoff, which also checks the raw data behind a sample; confirm one offline with
+<span class="mono">handoff verify-card &lt;card.json&gt;</span>.</p>
 <p class="muted">License of the dataset: {esc(source['license'])}. Handoff is an independent acceptance check for robot
 training data that runs where the data lives.{f' Contact: {esc(contact)}.' if contact else ''}</p>"""
     when = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    return page(f"Handoff audit: {source['repo']}", f"{when} · data revision {source['revision'][:7]} · tool v{__version__}", body)
+    return page(f"Handoff self-check: {source['repo']}", f"{when} · data revision {source['revision'][:7]} · tool v{__version__}", body)
 
 
 def audit(repo: str, out_root: Path, data_root: Path, max_mb: float, contact: str) -> dict:
